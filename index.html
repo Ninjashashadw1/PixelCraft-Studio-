@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PixelCraft Studio</title>
+    <link href="https://cdn.materialdesignicons.com/6.5.95/css/materialdesignicons.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #1e1e2f;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            background-color: #2a2a40;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .toolbar {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 5px; 
+            flex-wrap: wrap;
+        }
+
+        .toolbar input,
+        .toolbar button,
+        .toolbar select {
+            margin: 2px; 
+            padding: 8px; 
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px; 
+        }
+
+        .toolbar button {
+            background-color: #4CAF50;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .toolbar button:hover {
+            background-color: #45a049;
+        }
+
+        .toolbar button#eraserBtn {
+            background-color: #f44336;
+        }
+
+        .toolbar button#eraserBtn:hover {
+            background-color: #d32f2f;
+        }
+
+        .toolbar button#fillBtn {
+            background-color: #2196F3;
+        }
+
+        .toolbar button#fillBtn:hover {
+            background-color: #1e88e5;
+        }
+
+        .toolbar button#clearCanvas {
+            background-color: #FF9800;
+        }
+
+        .toolbar button#clearCanvas:hover {
+            background-color: #fb8c00;
+        }
+
+        .toolbar button#undoBtn,
+        .toolbar button#redoBtn {
+            background-color: #9C27B0;
+        }
+
+        .toolbar button#undoBtn:hover,
+        .toolbar button#redoBtn:hover {
+            background-color: #8e24aa;
+        }
+
+        .toolbar button#downloadBtn {
+            background-color: #607D8B;
+        }
+
+        .toolbar button#downloadBtn:hover {
+            background-color: #546E7A;
+        }
+
+        .canvas-container {
+            display: flex;
+            justify-content: center;
+            overflow: auto;
+            max-width: 100%;
+        }
+
+        canvas {
+            border: 2px solid #444;
+            background-color: #fff;
+            cursor: crosshair;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #2a2a40;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            position: relative;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .hand-animation {
+            width: 50px;
+            height: 50px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M18 9V4H16V9H14V5H12V9H10V6H8V13L14 15V17H10V19H20V15H18V9Z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: center;
+            animation: handMove 2s infinite;
+        }
+
+        @keyframes handMove {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(20px); }
+            100% { transform: translateX(0); }
+        }
+
+        .step {
+            margin-bottom: 20px;
+        }
+
+        #startTutorial {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #startTutorial:hover {
+            background-color: #45a049;
+        }
+
+        #skipTutorial {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        #skipTutorial:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PixelCraft Studio</h1>
+        <div class="toolbar">
+            <input type="color" id="colorPicker" value="#000000">
+            <button id="eraserBtn">
+                <span class="mdi mdi-eraser"></span> Borrar
+            </button>
+            <button id="fillBtn">
+                <span class="mdi mdi-format-paint"></span> Preencher
+            </button>
+            <button id="clearCanvas">
+                <span class="mdi mdi-delete"></span> Limpar Tudo
+            </button>
+            <button id="undoBtn">
+                <span class="mdi mdi-undo"></span> Desfazer
+            </button>
+            <button id="redoBtn">
+                <span class="mdi mdi-redo"></span> Refazer
+            </button>
+            <button id="downloadBtn">
+                <span class="mdi mdi-download"></span> Baixar
+            </button>
+            <select id="canvasSize">
+                <option value="16">16x16</option>
+                <option value="32">32x32</option>
+                <option value="64">64x64</option>
+                <option value="128">128x128</option>
+            </select>
+            <button id="zoomInBtn">
+                <span class="mdi mdi-magnify-plus"></span> Zoom In
+            </button>
+            <button id="zoomOutBtn">
+                <span class="mdi mdi-magnify-minus"></span> Zoom Out
+            </button>
+        </div>
+        <div class="canvas-container">
+            <canvas id="pixelCanvas" width="400" height="400"></canvas>
+        </div>
+    </div>
+    <div id="tutorialModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Bem-vindo ao PixelCraft Studio!</h2>
+            <p>Vamos criar um sprite juntos. Siga o tutorial ou clique em "Skip" para pular.</p>
+            <div id="tutorialSteps">
+                <div class="step" data-step="1">
+                    <p>1. Selecione uma cor no seletor de cores.</p>
+                    <div class="hand-animation" id="handColorPicker"></div>
+                </div>
+                <div class="step" data-step="2">
+                    <p>2. Clique no canvas para pintar pixels.</p>
+                    <div class="hand-animation" id="handCanvas"></div>
+                </div>
+                <div class="step" data-step="3">
+                    <p>3. Use o botão "Borrar" para apagar blocos individuais.</p>
+                    <div class="hand-animation" id="handEraser"></div>
+                </div>
+                <div class="step" data-step="4">
+                    <p>4. Clique em "Baixar Sprite" para salvar sua arte.</p>
+                    <div class="hand-animation" id="handDownload"></div>
+                </div>
+            </div>
+            <button id="startTutorial">Começar Tutorial</button>
+            <button id="skipTutorial">Skip</button>
+        </div>
+    </div>
+
+    <script>
+const canvas = document.getElementById('pixelCanvas');
+const ctx = canvas.getContext('2d');
+const colorPicker = document.getElementById('colorPicker');
+const eraserBtn = document.getElementById('eraserBtn');
+const fillBtn = document.getElementById('fillBtn');
+const clearCanvas = document.getElementById('clearCanvas');
+const undoBtn = document.getElementById('undoBtn');
+const redoBtn = document.getElementById('redoBtn');
+const downloadBtn = document.getElementById('downloadBtn');
+const canvasSize = document.getElementById('canvasSize');
+const zoomInBtn = document.getElementById('zoomInBtn');
+const zoomOutBtn = document.getElementById('zoomOutBtn');
+const tutorialModal = document.getElementById('tutorialModal');
+const closeModal = document.querySelector('.close');
+const startTutorial = document.getElementById('startTutorial');
+const skipTutorial = document.getElementById('skipTutorial');
+let pixelSize = 20;
+let canvasWidth = 400;
+let canvasHeight = 400;
+let isErasing = false;
+let scale = 1;
+const history = [];
+let currentStep = -1;
+function initCanvas() {
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+    drawGrid();
+    saveState();
+}
+
+function drawGrid() {
+    ctx.strokeStyle = '#ddd';
+    ctx.lineWidth = 1;
+    for (let x = 0; x <= canvasWidth; x += pixelSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvasHeight);
+        ctx.stroke();
+    }
+    for (let y = 0; y <= canvasHeight; y += pixelSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvasWidth, y);
+        ctx.stroke();
+    }
+}
+function handlePixel(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.floor((e.clientX - rect.left) / pixelSize) * pixelSize;
+    const y = Math.floor((e.clientY - rect.top) / pixelSize) * pixelSize;
+    if (isErasing) {
+        ctx.fillStyle = '#fff';
+    } else {
+        ctx.fillStyle = colorPicker.value;
+    }
+    ctx.fillRect(x, y, pixelSize, pixelSize);
+    drawGrid();
+    saveState();
+}
+function floodFill(x, y, targetColor, fillColor) {
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const pixels = imageData.data;
+    const stack = [[x, y]];
+    const baseColor = getPixelColor(x, y, pixels);
+
+    if (baseColor === fillColor) return;
+
+    while (stack.length > 0) {
+        const [currentX, currentY] = stack.pop();
+        const currentColor = getPixelColor(currentX, currentY, pixels);
+
+        if (currentColor === baseColor) {
+            setPixelColor(currentX, currentY, fillColor, pixels);
+            stack.push([currentX + 1, currentY]);
+            stack.push([currentX - 1, currentY]);
+            stack.push([currentX, currentY + 1]);
+            stack.push([currentX, currentY - 1]);
+        }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    drawGrid();
+    saveState();
+}
+
+function getPixelColor(x, y, pixels) {
+    const index = (y * canvas.width + x) * 4;
+    return `rgba(${pixels[index]}, ${pixels[index + 1]}, ${pixels[index + 2]}, ${pixels[index + 3]})`;
+}
+function setPixelColor(x, y, color, pixels) {
+    const index = (y * canvas.width + x) * 4;
+    const rgba = color.match(/\d+/g);
+    for (let i = 0; i < 4; i++) {
+        pixels[index + i] = parseInt(rgba[i]);
+    }
+}
+eraserBtn.addEventListener('click', () => {
+    isErasing = !isErasing;
+    eraserBtn.style.backgroundColor = isErasing ? '#d32f2f' : '#4CAF50';
+});
+
+fillBtn.addEventListener('click', () => {
+    isErasing = false;
+    eraserBtn.style.backgroundColor = '#4CAF50';
+    canvas.addEventListener('click', handleFill);
+});
+
+function handleFill(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.floor((e.clientX - rect.left) / pixelSize) * pixelSize;
+    const y = Math.floor((e.clientY - rect.top) / pixelSize) * pixelSize;
+    floodFill(x, y, getPixelColor(x, y, ctx.getImageData(0, 0, canvas.width, canvas.height).data), colorPicker.value);
+    canvas.removeEventListener('click', handleFill);
+}
+clearCanvas.addEventListener('click', () => {
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    initCanvas();
+});
+undoBtn.addEventListener('click', undo);
+
+redoBtn.addEventListener('click', redo);
+
+function saveState() {
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    history.push(imageData);
+    currentStep++;
+}
+
+function undo() {
+    if (currentStep > 0) {
+        currentStep--;
+        ctx.putImageData(history[currentStep], 0, 0);
+    }
+}
+function redo() {
+    if (currentStep < history.length - 1) {
+        currentStep++;
+        ctx.putImageData(history[currentStep], 0, 0);
+    }
+}
+
+downloadBtn.addEventListener('click', () => {
+    const link = document.createElement('a');
+    link.download = 'pixel-art.png';
+    link.href = canvas.toDataURL();
+    link.click();
+});
+
+canvasSize.addEventListener('change', () => {
+    const size = parseInt(canvasSize.value);
+    canvasWidth = size * pixelSize;
+    canvasHeight = size * pixelSize;
+    initCanvas();
+});
+
+zoomInBtn.addEventListener('click', () => {
+    scale += 0.1;
+    applyZoom();
+});
+
+zoomOutBtn.addEventListener('click', () => {
+    scale -= 0.1;
+    applyZoom();
+});
+
+function applyZoom() {
+    canvas.style.transform = `scale(${scale})`;
+}
+
+function runTutorial() {
+    if (localStorage.getItem('isFirstTime') === null) {
+        tutorialModal.style.display = 'flex';
+        localStorage.setItem('isFirstTime', 'false');
+    }
+}
+
+skipTutorial.addEventListener('click', () => {
+    tutorialModal.style.display = 'none';
+});
+
+closeModal.addEventListener('click', () => {
+    tutorialModal.style.display = 'none';
+});
+
+window.onload = () => {
+    initCanvas();
+    runTutorial();
+};
+
+canvas.addEventListener('click', handlePixel);
+    </script>
+</body>
+  </html>
